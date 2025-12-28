@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Value Bets</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      header {
+        background: #0f172a;
+        color: #fff;
+        padding: 20px 16px;
+        text-align: center;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      }
+      .card h3 {
+        margin: 0 0 4px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #475569;
+      }
+      .card p {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 700;
+      }
+      .bet-list {
+        display: grid;
+        gap: 12px;
+      }
+      .bet {
+        border-radius: 14px;
+        padding: 14px;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      }
+      .bet h4 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+      }
+      .bet-details {
+        display: grid;
+        gap: 4px;
+        font-size: 0.92rem;
+        color: #334155;
+      }
+      button {
+        margin-top: 10px;
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        background: #0ea5e9;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      button:disabled {
+        background: #94a3b8;
+      }
+      .stop {
+        display: none;
+        text-align: center;
+        font-size: clamp(2rem, 8vw, 3rem);
+        font-weight: 800;
+        color: #b91c1c;
+        padding: 40px 12px;
+      }
+      .show-stop .bet-list {
+        display: none;
+      }
+      .show-stop .stop {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Value Bets</h1>
+      <p>Demo betting log for today</p>
+    </header>
+
+    <main id="app">
+      <section class="stats">
+        <div class="card">
+          <h3>Bets Today</h3>
+          <p id="betsToday">0</p>
+        </div>
+        <div class="card">
+          <h3>Profit Today</h3>
+          <p id="profitToday">0</p>
+        </div>
+      </section>
+
+      <section class="bet-list" id="betList"></section>
+
+      <section class="stop" id="stopMessage">STOP FOR TODAY</section>
+    </main>
+
+    <script>
+      const bets = [
+        {
+          event: "Lakers vs Warriors",
+          bookmaker: "StakePlus",
+          odds: "+115",
+          stake: 2,
+          expectedProfit: 1.5,
+        },
+        {
+          event: "Real Madrid vs PSG",
+          bookmaker: "GoalLine",
+          odds: "+140",
+          stake: 3,
+          expectedProfit: 2.1,
+        },
+        {
+          event: "Yankees vs Red Sox",
+          bookmaker: "LineMax",
+          odds: "+105",
+          stake: 2,
+          expectedProfit: -2.2,
+        },
+      ];
+
+      let betsToday = 0;
+      let profitToday = 0;
+
+      const betsTodayEl = document.getElementById("betsToday");
+      const profitTodayEl = document.getElementById("profitToday");
+      const betListEl = document.getElementById("betList");
+      const appEl = document.getElementById("app");
+
+      const updateStats = () => {
+        betsTodayEl.textContent = betsToday;
+        const sign = profitToday >= 0 ? "+" : "";
+        profitTodayEl.textContent = `${sign}${profitToday.toFixed(1)}`;
+        const shouldStop = betsToday >= 5 || profitToday <= -5;
+        appEl.classList.toggle("show-stop", shouldStop);
+      };
+
+      const renderBets = () => {
+        betListEl.innerHTML = "";
+        bets.forEach((bet) => {
+          const card = document.createElement("article");
+          card.className = "bet";
+
+          card.innerHTML = `
+            <h4>${bet.event}</h4>
+            <div class="bet-details">
+              <div><strong>Bookmaker:</strong> ${bet.bookmaker}</div>
+              <div><strong>Odds:</strong> ${bet.odds}</div>
+              <div><strong>Stake:</strong> ${bet.stake}u</div>
+            </div>
+          `;
+
+          const button = document.createElement("button");
+          button.textContent = "Log Bet";
+          button.addEventListener("click", () => {
+            betsToday += 1;
+            profitToday += bet.expectedProfit;
+            button.disabled = true;
+            button.textContent = "Logged";
+            updateStats();
+          });
+
+          card.appendChild(button);
+          betListEl.appendChild(card);
+        });
+      };
+
+      renderBets();
+      updateStats();
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js");
+      }
+    </script>
+  </body>
+</html>
